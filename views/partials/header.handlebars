@@ -1,0 +1,33 @@
+<header>
+  <h1>Tâches</h1>
+
+  <nav>
+    <ul>
+      <li>
+        <a href="/">Accueil</a>
+      </li>
+      <!-- Page connexion uniquement si l'utilisateur n'est pas connecté -->
+      {{#unless user}}
+        <li id="btn-connexion">
+          <a href="/connexion">Connexion</a>
+        </li>
+      {{/unless}}
+
+       <!-- Page inscription uniquement si l'utilisateur n'est pas connecté -->
+      {{#unless user}}
+        <li>
+          <a href="/inscription">Inscription</a>
+        </li>
+      {{/unless}}
+
+      <!-- Bouton déconnexion uniquement si l'utilisateur est connecté -->
+        {{#if user}}
+        <li>
+          <input id="btn-deconnexion" value="Déconnexion" type="button">
+
+        </li>
+        {{/if}}
+
+    </ul>
+  </nav>
+</header>

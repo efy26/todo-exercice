@@ -1,0 +1,59 @@
+<section>
+    
+    <h2>Contenu spécifique d'une page</h2>
+    <p>
+        {{texte}}
+
+        <p>
+            {{!-- {{isAdmin}} --}}
+        </p>
+
+
+    </p>
+    <ul>
+        {{#each listeEpicerie}}
+        <li>
+            <input type="text" value="{{this}}" />
+        </li>
+        <li>
+            <input type="button" value="Supprimer" />
+        </li>
+    {{/each}}
+    </ul>
+    <ol id="salles-list">
+        {{#each salles}}
+        <li class="salles-list-li" data-id="{{this.id}}">
+
+                <input type="text" style="width: 5rem ;" value="{{this.salle}}" {{#unless ../isAdmin}}disabled{{/unless}} /> -
+                <input type="text" style="width: 6rem ;" value="{{this.contenu}}" {{#unless ../isAdmin}}disabled{{/unless}} /> -
+                <input type="text" style="width: 6rem ;" value="{{this.utilisateur}}" disabled />
+
+
+           {{#if ../isAdmin}}
+                <input class="btn-delete" type="button" value="Supprimer" /> 
+                <input class="btn-update" type="button" value="Modifier" />
+            {{/if}}
+
+
+
+        </li>
+        <br>
+    {{/each}}
+    </ol>
+    <form id="form-add-salle">
+        <input type="text" id="nouvelle-salle" placeholder="Entrez le nom de la salle" autofocus {{#unless user}}disabled{{/unless}}>
+        <input type="text" id="nouveau-mssg" placeholder="Entrez un message" autofocus {{#unless user}}disabled{{/unless}}>
+        <input type="submit" value="Ajouter une salle" {{#unless user}}disabled{{/unless}}>
+    </form>
+    <div class="erreur" id="erreur-tache" style="color: red;">
+        
+    </div>
+    {{#unless estConnecte}}
+    <h2>{{nom}}</h2>
+    <p>Recevoir des courriels d'information:</p>
+    <input type="checkbox" {{#if recevoirCourriel}}checked{{/if}}>
+{{else}}
+    <p>Vous n'êtes pas connecté.</p>
+{{/unless}}
+
+</section>
