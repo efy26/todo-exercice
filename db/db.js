@@ -44,7 +44,9 @@ export async function initDB() {
       );
     `);
 
-    console.log("📌 Base SQLite initialisée !");
+
+    console.log(">>> db.js chargé depuis :", import.meta.url);
+
   }
 
   return db;

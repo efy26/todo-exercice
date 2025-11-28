@@ -58,6 +58,8 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static('public'));
+console.log("Static folder path:", new URL('./public/', import.meta.url).pathname);
+
 
 // Handlebars
 app.engine('handlebars', engine());
