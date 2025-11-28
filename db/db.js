@@ -4,10 +4,12 @@ import { existsSync } from "node:fs";
 
 const FILE_DB = './database.sqlite';
 
+let db = null; // 👈 rendu accessible à tous les modèles
+
 export async function initDB() {
   const isNewDB = !existsSync(FILE_DB);
 
-  const db = await open({
+  db = await open({
     filename: FILE_DB,
     driver: sqlite3.Database
   });
@@ -47,3 +49,5 @@ export async function initDB() {
 
   return db;
 }
+
+export { db }; // 👈 maintenant { db } EXISTE réellement !
