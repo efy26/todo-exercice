@@ -2,23 +2,21 @@ import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { existsSync } from "node:fs";
 
-// Vérifie si le fichier de base de données est 
-// nouveau (n'existe pas encore)
-const IS_NEW_DB = !existsSync(process.env.FILE_DB);
+// Utiliser un fichier SQLite local
+const FILE_DB = './database.sqlite';
 
-// Connexion à la base de données. Vous devez 
-// spécifier le nom du fichier de base de données 
-// dans le fichier .env
+// Vérifie si le fichier de base de données est nouveau (n'existe pas encore)
+const IS_NEW_DB = !existsSync(FILE_DB);
+
+// Connexion à la base de données
 const db = await open({
-    filename: process.env.FILE_DB,
+    filename: FILE_DB,
     driver: sqlite3.Database
-})
+});
 
-// Création de la table si elle n'existe pas, on 
-// peut écrire du code SQL pour initialiser les 
-// tables et données dans la fonction exec()
+// Création de la table si elle n'existe pas
 if (IS_NEW_DB) {
-   await db.exec(`PRAGMA foreign_keys = ON;`);
+    await db.exec(`PRAGMA foreign_keys = ON;`);
 
     await db.exec(`
         CREATE TABLE IF NOT EXISTS salles (
@@ -46,6 +44,8 @@ if (IS_NEW_DB) {
             FOREIGN KEY (salle_id) REFERENCES salles(id) ON DELETE CASCADE
         );
     `);
+
+    console.log("Base de données initialisée avec succès !");
 }
 
 export { db };
