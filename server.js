@@ -26,6 +26,7 @@ import './auth.js';
 import { nomSalleAndMssgValid, courrielValide, motDePasseValide } from './middlewares/validation.js';
 import { userAuth, userNotAuth, userAdmin } from './middlewares/auth.js';
 
+// IMPORTANT : bon chemin vers db
 import { initDB } from './db/db.js';
 
 // ===========================
@@ -63,13 +64,13 @@ app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 
 // ===========================
-// ROUTE DE SANTÉ (DOIT ÊTRE AU TOP)
+// ROUTE DE SANTÉ
 // ===========================
-app.get("/health", (req, res) => res.status(200).send("OK"));
+app.get("/health",(req,res)=>res.status(200).send("OK"));
 
-// ===================================================
-// =================== API ROUTES ====================
-// ===================================================
+// ===========================
+// ROUTES API (inchangées)
+// ===========================
 
 app.get('/api/salles', async (req, res) => res.status(200).json(await getSalles()));
 app.get('/api/messages', async (req, res) => res.status(200).json(await getMessage()));
@@ -131,7 +132,7 @@ app.patch('/api/messages/:index', async (req,res)=>{
 });
 
 // ===========================
-// PAGES WEB
+// PAGES
 // ===========================
 app.get('/', async (req,res)=>{
     res.render('home', {
@@ -146,9 +147,9 @@ app.get('/', async (req,res)=>{
 app.get('/connexion',(req,res)=>res.render('auth',{title:'connexion',type:'connexion',script:["/js/connexion.js"],user:req.user}));
 app.get('/inscription',(req,res)=>res.render('auth',{title:'inscription',type:'inscription',script:["/js/inscription.js"],user:req.user}));
 
-// ===========================
-// START SERVEUR + DB
-// ===========================
+// =======================================================================
+// DÉMARRAGE
+// =======================================================================
 async function startServer() {
     try {
         await initDB();

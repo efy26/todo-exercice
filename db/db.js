@@ -42,7 +42,7 @@ export async function initDB() {
       );
     `);
 
-    console.log("Base de données initialisée avec succès !");
+    console.log("📌 Base SQLite initialisée !");
   }
 
   return db;
