@@ -1,270 +1,162 @@
 // Chargement des configurations
 import 'dotenv/config'
 
-// Importation de Express et de plusieurs middlewares
-import express, { json, request, response } from 'express';
+// Importation de Express et middlewares
+import express, { json } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 
-//importation de handlerbars
+// Handlebars
 import { engine } from "express-handlebars";
 
-// importation de session et memorystore
+// Sessions & authentification
 import session from 'express-session';
 import memorystore from 'memorystore';
-
-//importation de passport
 import passport from 'passport';
 
-// import des fonctions du modèle
+// Modèles
 import { addSalle, getSalles, deleteSalle, updateSalle } from './model/salle.js';
-import { getMessage, addMessage, updateMessage, deleteMessage } from './model/message.js';
+import { getMessage, addMessage, updateMessage } from './model/message.js';
 import { getTableByJointure } from './model/jointureTable.js';
-
 import { createUtilisateur } from './model/utilisateur.js';
 import './auth.js';
 
-// import des middlewares de validation
-import { nomSalleAndMssgValid } from './middlewares/validation.js';
-import { courrielValide, motDePasseValide } from './middlewares/validation.js';
-import { userAuth, userAuthRedirect, userNotAuth, userAdmin } from './middlewares/auth.js';
+// Middlewares
+import { nomSalleAndMssgValid, courrielValide, motDePasseValide } from './middlewares/validation.js';
+import { userAuth, userNotAuth, userAdmin } from './middlewares/auth.js';
 
 import { initDB } from './db.js';
 
-
-// Création du serveur
+// ===========================
+// CONFIG EXPRESS
+// ===========================
 const app = express();
-
-// Configuration de la gestion de session
 const MemoryStore = memorystore(session)
 
-// Ajout de middlewares
 app.use(express.json());
 app.use(json());
 app.use(cors());
 app.use(helmet());
 app.use(compression());
-app.use(
-    session({
-        store: new MemoryStore({
-            checkPeriod: 86400000 // Nettoie les sessions expirées toutes les 24h
-        }),
-        secret: process.env.SESSION_SECRET || "devsecret", // Obligatoire
-        resave: false,
-        saveUninitialized: false,
-        rolling: true,
-        cookie: { 
-            maxAge: 3600000, // 1h
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production' // true si HTTPS en prod
-        },
-        name: process.env.npm_package_name || 'session_id'
-    })
-);
+
+app.use(session({
+    store: new MemoryStore({ checkPeriod: 86400000 }),
+    secret: process.env.SESSION_SECRET || "devsecret",
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
+    cookie: {
+        maxAge: 3600000,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production'
+    },
+    name: process.env.npm_package_name || 'session_id'
+}));
+
 app.use(passport.initialize());
 app.use(passport.session());
-// app.use((req, res, next) => {
-//   console.log("Session actuelle :", req.session);
-//   console.log("Utilisateur connecté :", req.user);
-//   next();
-// });
-
-// Autre middlewares
 app.use(express.static('public'));
 
-// Configuration de handlebars
+// Handlebars
 app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 
-// Ajout des routes
-// Les routes pour le GET
-app.get('/api/salles', async (request, response) => {
-    // Récupération des salles
-    const salles = await getSalles()
+// ===========================
+// ROUTE DE SANTÉ (DOIT ÊTRE AU TOP)
+// ===========================
+app.get("/health", (req, res) => res.status(200).send("OK"));
 
-    // On retourne les salles au client
-    response.status(200).json(salles);
+// ===================================================
+// =================== API ROUTES ====================
+// ===================================================
+
+app.get('/api/salles', async (req, res) => res.status(200).json(await getSalles()));
+app.get('/api/messages', async (req, res) => res.status(200).json(await getMessage()));
+
+app.get('/api/utilisateur-connecte', (req, res) =>
+    req.isAuthenticated() && req.user
+        ? res.json({ nom: req.user.nom })
+        : res.status(401).json({ message: 'Utilisateur non connecté' })
+);
+
+app.post('/api/salles', nomSalleAndMssgValid, userAuth, async (req,res) => {
+    await addSalle(req.body.nom);
+    res.status(201).end();
 });
 
-app.get('/api/messages', async (request, response) => {
-    // Récupération des messages
-    const messages = await getMessage()
-
-    // On retourne les messages au client
-    response.status(200).json(messages);
-})
-app.get('/api/utilisateur-connecte', (req, res) => {
-    if (req.isAuthenticated() && req.user) {
-        res.json({ nom: req.user.nom });
-    } else {
-        res.status(401).json({ message: 'Utilisateur non connecté' });
-    }
-});
-app.get('/api/all-tables/', async (request, response) => {
+app.post('/api/messages/:nomUtilisateur/:nomSalle', nomSalleAndMssgValid, userAuth, async (req,res) => {
     try {
-        const allTable = await getMessage()
-        response.status(200).json(allTable)
-    } catch (error) {
-        console.error('Erreur dans GET /api/messages/ :', error);
-        res.status(500).json({ error: error.message });
+        await addMessage(req.body.contenu, req.params.nomUtilisateur, req.params.nomSalle);
+        res.status(201).end()
+    } catch {
+        res.status(400).end();
     }
-})
-
-
-// Les routes pour le POST
-app.post('/api/salles', nomSalleAndMssgValid, userAuth, async (request, response) => {
-    // On ajoute le nom de la nouvelle salle avec la fonction du modèle
-    const addSalleRequest = await request.body;
-    await addSalle(addSalleRequest.nom);
-
-    // On retourne une réponse vide au client lui indiquant 
-    // que la création a réussi dans son statut
-    response.status(201).end();
 });
-app.post('/api/messages/:nomUtilisateur/:nomSalle', nomSalleAndMssgValid, userAuth, async (request, response) => {
+
+app.post('/api/utilisateurs', courrielValide, motDePasseValide, userNotAuth, async (req,res,next) => {
     try {
-        // On ajoute le message avec la fonction du modèle
-        const recupNomSalleRequest = request.params.nomSalle;
-        const recupNomUtilisateurRequest = request.params.nomUtilisateur;
-        const addMessageRequest = request.body;
-        await addMessage(addMessageRequest.contenu, recupNomUtilisateurRequest, recupNomSalleRequest);
-
-        response.status(201).end()
-    } catch (error) {
-        console.error("Erreur dans POST /api/messages :", error)
-        response.status(400).end()
+        await createUtilisateur(req.body.nom, req.body.mot_de_passe);
+        res.status(201).end();
+    } catch(error) {
+        error.code === 'SQLITE_CONSTRAINT' ? res.status(409).end() : next(error);
     }
-})
-app.post('/api/utilisateurs', courrielValide, motDePasseValide, userNotAuth, async (request, response, next) => {
-    try {
-        // Si la validation passe, on crée l'utilisateur
-        const createUtilisateurRequest = request.body;
-        await createUtilisateur(createUtilisateurRequest.nom, createUtilisateurRequest.mot_de_passe);
-
-        response.status(201).end()
-    } catch (error) {
-        // S'il y a une erreur de SQL, on regarde
-        // si c'est parce qu'il y a conflit
-        // d'identifiant
-        if (error.code === 'SQLITE_CONSTRAINT') {
-            response.status(409).end();
-        } else {
-            next(error);
-        }
-    }
-})
-app.post('/api/connexion', courrielValide, motDePasseValide, (request, response, next) => {
-    // On lance l'authentification avec passport.js
-    passport.authenticate('local', (error, user, info) => {
-        if (error) {
-            // S'il y a une erreur, on laisse Express la 
-            // gérer
-            next(error);
-        } else if (!user) {
-            // Si la connexion échoue, on envoit
-            // l'information au client avec un code
-            // 401 (Unauthorized)
-            response.status(401).json(info)
-        } else {
-            // Si tout fonctionne, on ajoute
-            // l'utilisateur dans la session et on 
-            // retourne un code 200 (OK)
-            request.logIn(user, (error) => {
-                if (error) {
-                    // On laisse Express gérer l'erreur
-                    next(error);
-                }
-                response.sendStatus(200);
-            })
-        }
-    })(request, response, next);
-})
-app.post('/api/deconnexion', userAuth, async (request, response, next) => {
-    // Déconnecter l'utilisateur
-    request.logOut((error) => {
-        if (error) {
-            // On laisse Express gérer l'erreur
-            next(error);
-        } else {
-            // Indiquer que la déconnexion a réussi
-            response.status(200).end();
-        }
-    })
-})
-
-// Les routes pour le DELETE
-app.delete('/api/salles/:index', userAdmin, async (request, response) => {
-    const deleteSalleRequest = parseInt(request.params.index, 10)
-    await deleteSalle(deleteSalleRequest)
-
-    response.status(200).end();
 });
 
-// Les routes pour le PATCH
-app.patch('/api/salles/:index', async (request, response) => {
-    const updateSalleRequestParams = parseInt(request.params.index, 10)
-    const updateSalleRequestBody = request.body
-    updateSalle(updateSalleRequestParams, updateSalleRequestBody.nom)
+app.post('/api/connexion', courrielValide, motDePasseValide, (req,res,next) =>
+    passport.authenticate('local', (err,user,info)=>{
+        if(err) return next(err);
+        if(!user) return res.status(401).json(info);
+        req.logIn(user, err => err ? next(err) : res.sendStatus(200));
+    })(req,res,next)
+);
 
-    response.status(200).end();
+app.post('/api/deconnexion', userAuth, (req,res,next) =>
+    req.logOut(err => err ? next(err) : res.sendStatus(200))
+);
 
+app.delete('/api/salles/:index', userAdmin, async (req,res)=>{
+    await deleteSalle(parseInt(req.params.index,10));
+    res.sendStatus(200);
 });
-app.patch('/api/messages/:index', async (request, response) => {
-    const updateMessageRequestParams = parseInt(request.params.index, 10)
-    const updateMessageRequestBody = await request.body
-    updateMessage(updateMessageRequestParams, updateMessageRequestBody.contenu)
 
-    response.status(200).end();
-})
+app.patch('/api/salles/:index', async (req,res)=>{
+    await updateSalle(parseInt(req.params.index,10), req.body.nom);
+    res.sendStatus(200);
+});
 
-// Ajout des routes pour les pages HTML
-app.get('/', async (request, response) => {
-    let salles = await getTableByJointure()
-    // let salles = await getSalles()
-    response.status(200).render('home', {
-        title: 'Accueil',
-        salles: salles,
-        script: ["/js/nomSalle.js", "/model/utilisateur.js", "/model/jointureTable.js"],
-        user: request.user,
-        isAdmin: request.user && request.user.niveau_acces === 2
+app.patch('/api/messages/:index', async (req,res)=>{
+    await updateMessage(parseInt(req.params.index,10), req.body.contenu);
+    res.sendStatus(200);
+});
 
-
-    })
-})
-
-app.get('/connexion', async (request, response) => {
-    response.status(200).render('auth', {
-        title: 'connexion - salle',
-        type: 'connexion',
-        script: ["/js/connexion.js"],
-        user: request.user
+// ===========================
+// PAGES WEB
+// ===========================
+app.get('/', async (req,res)=>{
+    res.render('home', {
+        title:"Accueil",
+        salles: await getTableByJointure(),
+        script:["/js/nomSalle.js"],
+        user:req.user,
+        isAdmin:req.user && req.user.niveau_acces===2
     })
 });
 
-app.get('/inscription', async (request, response) => {
-    response.status(200).render('auth', {
-        title: 'inscription - salle',
-        type: 'inscription',
-        script: ["/js/inscription.js"],
-        user: request.user,
-    })
-});
+app.get('/connexion',(req,res)=>res.render('auth',{title:'connexion',type:'connexion',script:["/js/connexion.js"],user:req.user}));
+app.get('/inscription',(req,res)=>res.render('auth',{title:'inscription',type:'inscription',script:["/js/inscription.js"],user:req.user}));
 
-// Démarrage du serveur
-
-
+// ===========================
+// START SERVEUR + DB
+// ===========================
 async function startServer() {
     try {
-        await initDB(); // base prête avant lancement serveur
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => console.log(" Serveur actif sur " + PORT));
-    } catch (error) {
-        console.error(" Erreur au démarrage :", error);
+        await initDB();
+        const PORT = process.env.PORT || 8080;
+        app.listen(PORT,()=>console.log("🚀 Serveur actif sur",PORT));
+    } catch(error) {
+        console.error("❌ Erreur au démarrage :",error);
         process.exit(1);
     }
 }
-
 startServer();
-
-
