@@ -43,14 +43,23 @@ app.use(json());
 app.use(cors());
 app.use(helmet());
 app.use(compression());
-app.use(session({
-    cookie: { maxAge: 3600000, sameSite: 'lax' },
-    name: process.env.npm_package_name,
-    resave: false,
-    saveUninitialized: false,
-    rolling: true,
-    secret: process.env.SESSION_SECRET
-}))
+app.use(
+    session({
+        store: new MemoryStore({
+            checkPeriod: 86400000 // Nettoie les sessions expirées toutes les 24h
+        }),
+        secret: process.env.SESSION_SECRET || "devsecret", // Obligatoire
+        resave: false,
+        saveUninitialized: false,
+        rolling: true,
+        cookie: { 
+            maxAge: 3600000, // 1h
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production' // true si HTTPS en prod
+        },
+        name: process.env.npm_package_name || 'session_id'
+    })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 // app.use((req, res, next) => {
