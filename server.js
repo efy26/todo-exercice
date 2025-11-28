@@ -26,7 +26,7 @@ import './auth.js';
 import { nomSalleAndMssgValid, courrielValide, motDePasseValide } from './middlewares/validation.js';
 import { userAuth, userNotAuth, userAdmin } from './middlewares/auth.js';
 
-import { initDB } from './db.js';
+import { initDB } from './db/db.js';
 
 // ===========================
 // CONFIG EXPRESS
