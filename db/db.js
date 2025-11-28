@@ -52,4 +52,6 @@ export async function initDB() {
   return db;
 }
 
-export { db }; // 👈 maintenant { db } EXISTE réellement !
+export function getDB() {
+    return db;
+} // 👈 maintenant { db } EXISTE réellement !

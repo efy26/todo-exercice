@@ -1,4 +1,4 @@
-import { db } from "../db/db.js";
+import { getDB } from "../db/db.js";
 
 // recupérer tous les messages d'une salle
 export async function getMessage() {
@@ -11,6 +11,7 @@ export async function getMessage() {
 // ajouter un message
 
 export async function addMessage(contenu, nomUtilisateur, nomSalle) {
+    const db = getDB();
     const salle = await db.get(`
         SELECT id FROM salles
         WHERE nom = ?`,
@@ -36,6 +37,7 @@ console.log("Utilisateur trouvé :", utilisateur);
 
 //modifier un message
 export async function updateMessage(index, contenu) {
+    const db = getDB();
     const updateMessageRequest = await db.run(`
         UPDATE messages
         SET contenu = ?
@@ -47,6 +49,7 @@ export async function updateMessage(index, contenu) {
 
 // Fonction pour supprimer une salle
 export async function deleteMessage(index) {
+    const db = getDB();
     const deleteMessageRequest = db.run(`
         DELETE FROM messages
         WHERE id = ?`,

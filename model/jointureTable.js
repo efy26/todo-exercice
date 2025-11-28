@@ -1,6 +1,7 @@
-import { db } from "../db/db.js";
+import { getDB } from "../db/db.js";
 
 export async function getTableByJointure() {
+    const db = getDB();
     const allTable = await db.all(`
         SELECT 
         messages.id,

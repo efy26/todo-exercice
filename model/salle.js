@@ -1,7 +1,8 @@
-import { db } from "../db/db.js";
+import { getDB } from "../db/db.js";
 
 // Fonction aller chercher toutes les salles
 export async function getSalles() {
+    const db = getDB();
     const salles = db.all(`
         SELECT * FROM salles
     `);
@@ -11,6 +12,7 @@ export async function getSalles() {
     
 // Fonction pour ajouter une nouvelle salle
 export async function addSalle(nomSalle) {
+    const db = getDB();
     const addSalleRequest = await db.run(`
         INSERT INTO salles (nom)
         VALUES (?)`,
@@ -21,6 +23,7 @@ export async function addSalle(nomSalle) {
     
 // Fonction pour supprimer une salle
 export async function deleteSalle(index) {
+    const db = getDB();
     const deleteSalleRequest = db.run(`
         DELETE FROM salles
         WHERE id = ?`,
@@ -32,6 +35,7 @@ export async function deleteSalle(index) {
 
 // Fonction pour modifier une salle
 export async function updateSalle(index, nomSalle) {
+    const db = getDB();
     const updateSalleRequest = await db.run(`
         UPDATE salles
         SET nom = ?
