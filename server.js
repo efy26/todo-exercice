@@ -241,4 +241,6 @@ app.get('/inscription', async (request, response) => {
 });
 
 // Démarrage du serveur
-app.listen(process.env.PORT)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Serveur actif sur " + PORT));
+
