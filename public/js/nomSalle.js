@@ -58,12 +58,14 @@ async function addNomAndMssg(event) {
     // Envoyer de la requête
     const response = await fetch('/api/salles', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nom: data.nom, contenu: data.contenu })
     })
 
     const responseMss = await fetch(`/api/messages/${userNom}/${data.nom}`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contenu: data.contenu, nom: data.nom})
     })
@@ -119,12 +121,14 @@ async function updateSalle(event) {
 
     const response = await fetch(`/api/salles/${salleId}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({nom: data.nom})
     })
 
     const responseMss = await fetch(`/api/messages/${salleId}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({contenu: data.contenu,})
     })

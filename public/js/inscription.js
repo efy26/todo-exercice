@@ -34,6 +34,7 @@ console.log(JSON.stringify({ nom: data.nom, mot_de_passe: data.motDePasse }));
      // Envoyer la requête au serveur
      const response = await fetch('/api/utilisateurs', {
         method: 'POST',
+        credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({nom: data.nom, mot_de_passe: data.motDePasse})
      })

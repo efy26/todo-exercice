@@ -48,10 +48,10 @@ app.use(session({
     saveUninitialized: false,
     rolling: true,
     cookie: {
-        maxAge: 3600000,
-        sameSite: 'none',
-        secure: true
-    },
+    maxAge: 3600000,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: process.env.NODE_ENV === 'production'
+},
     name: process.env.npm_package_name || 'session_id'
 }));
 
