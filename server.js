@@ -49,8 +49,8 @@ app.use(session({
     rolling: true,
     cookie: {
         maxAge: 3600000,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production'
+        sameSite: 'none',
+        secure: true
     },
     name: process.env.npm_package_name || 'session_id'
 }));

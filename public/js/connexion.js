@@ -32,6 +32,7 @@ async function connexion(event) {
     // Envoyer la requête au serveur
     const response = await fetch('/api/connexion', {
         method: 'POST',
+        credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({nom:data.nom, mot_de_passe:data.motDePasse})
     })
