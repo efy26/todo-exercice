@@ -30,6 +30,8 @@ import { nomSalleAndMssgValid } from './middlewares/validation.js';
 import { courrielValide, motDePasseValide } from './middlewares/validation.js';
 import { userAuth, userAuthRedirect, userNotAuth, userAdmin } from './middlewares/auth.js';
 
+import { initDB } from './db.js';
+
 
 // Création du serveur
 const app = express();
@@ -250,6 +252,19 @@ app.get('/inscription', async (request, response) => {
 });
 
 // Démarrage du serveur
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Serveur actif sur " + PORT));
+
+
+async function startServer() {
+    try {
+        await initDB(); // base prête avant lancement serveur
+        const PORT = process.env.PORT || 3000;
+        app.listen(PORT, () => console.log(" Serveur actif sur " + PORT));
+    } catch (error) {
+        console.error(" Erreur au démarrage :", error);
+        process.exit(1);
+    }
+}
+
+startServer();
+
 
