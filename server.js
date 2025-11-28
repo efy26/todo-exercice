@@ -38,8 +38,13 @@ const MemoryStore = memorystore(session)
 app.use(express.json());
 app.use(json());
 app.use(cors());
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false
+}));
+
 app.use(compression());
+app.set("trust proxy", 1);
 
 app.use(session({
     store: new MemoryStore({ checkPeriod: 86400000 }),
